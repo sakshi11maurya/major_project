@@ -40,6 +40,17 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
+@app.route('/monitor')
+@login_required
+def monitor():
+    import psutil
+    cpu = psutil.cpu_percent()
+    ram = psutil.virtual_memory().percent
+    disk = psutil.disk_usage('/').percent
+    return render_template('monitor.html', cpu=cpu, ram=ram, disk=disk)
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()

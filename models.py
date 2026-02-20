@@ -15,3 +15,12 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
+class Alert(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(200))
+    level = db.Column(db.String(50))
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(200))
+    level = db.Column(db.String(50))
