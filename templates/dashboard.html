@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Security Management Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cloud Security Management Dashboard</h1>
+            <div class="user-info">
+                <p>Hello, {{ user.username }}! You are logged in as {{ user.role }}.</p>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <h2>Security Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Monitor Cloud Resources</h3>
+                    <p>Real-time monitoring of your cloud infrastructure with automated alerts and comprehensive reporting.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Security Alerts</h3>
+                    <p>Advanced threat detection and instant notifications for potential security breaches and vulnerabilities.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Compliance Checks</h3>
+                    <p>Automated compliance monitoring against industry standards like GDPR, HIPAA, and SOC 2.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Access Management</h3>
+                    <p>Role-based access control and identity management for secure resource access and administration.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
