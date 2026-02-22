@@ -48,6 +48,16 @@
                 </div>
             </div>
 
+            <!-- Success Rate Card -->
+            <div class="stat-card">
+                <div class="stat-icon success-icon">✅</div>
+                <div class="stat-content">
+                    <h3>Success Rate</h3>
+                    <p class="stat-number">{% if total_login_attempts > 0 %}{{ ((successful_logins / total_login_attempts) * 100) | int }}%{% else %}0%{% endif %}</p>
+                    <small>Overall login success</small>
+                </div>
+            </div>
+
             <!-- Alerts Card -->
             <div class="stat-card">
                 <div class="stat-icon alert-icon">⚠️</div>
@@ -91,14 +101,52 @@
             {% endif %}
         </div>
 
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <h2 class="section-title">📊 Analytics & Reports</h2>
+            
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Login Activity Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>📈 Login Activity (Last 7 Days)</h3>
+                        <span class="chart-badge">Active Monitoring</span>
+                    </div>
+                    <canvas id="activityChart"></canvas>
+                </div>
+
+                <!-- Failed Attempts Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>⚠️ Failed Login Attempts (Last 7 Days)</h3>
+                        <span class="chart-badge danger">Security Alert</span>
+                    </div>
+                    <canvas id="failedAttemptsChart"></canvas>
+                </div>
+
+                <!-- Success vs Failed Pie Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>🎯 Login Success Rate</h3>
+                        <span class="chart-badge">Overall Performance</span>
+                    </div>
+                    <canvas id="successRateChart"></canvas>
+                </div>
+
+                <!-- User Activity Bar Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>👤 Top Active Users (Last 7 Days)</h3>
+                        <span class="chart-badge">Activity Tracking</span>
+                    </div>
+                    <canvas id="userActivityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Content Area -->
         <div class="main-content">
-            <!-- Activity Chart -->
-            <div class="chart-container">
-                <h3>Login Activity (Last 7 Days)</h3>
-                <canvas id="activityChart"></canvas>
-            </div>
-
             <!-- Alerts Section -->
             <div class="alerts-section">
                 <h3>Latest Alerts</h3>
@@ -148,49 +196,182 @@
         // Prepare chart data
         const chartLabels = {{ chart_labels | tojson }};
         const chartData = {{ chart_data | tojson }};
+        const failedChartLabels = {{ failed_chart_labels | tojson }};
+        const failedChartData = {{ failed_chart_data | tojson }};
+        const userActivityLabels = {{ user_activity_labels | tojson }};
+        const userActivityValues = {{ user_activity_values | tojson }};
+        const successfulLogins = {{ successful_logins }};
+        const failedLogins = {{ failed_logins }};
 
-        // Create chart
-        const ctx = document.getElementById('activityChart').getContext('2d');
-        new Chart(ctx, {
+        // Color scheme
+        const colors = {
+            primary: '#007bff',
+            danger: '#dc3545',
+            success: '#28a745',
+            warning: '#ffc107',
+            info: '#17a2b8'
+        };
+
+        // 1. Login Activity Chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        new Chart(activityCtx, {
             type: 'line',
             data: {
                 labels: chartLabels,
                 datasets: [{
-                    label: 'Login Attempts',
+                    label: 'Total Login Attempts',
                     data: chartData,
-                    borderColor: '#007bff',
+                    borderColor: colors.primary,
                     backgroundColor: 'rgba(0, 123, 255, 0.1)',
                     tension: 0.4,
                     fill: true,
-                    pointBackgroundColor: '#007bff',
+                    pointBackgroundColor: colors.primary,
                     pointBorderColor: '#fff',
                     pointRadius: 5,
-                    pointHoverRadius: 7
+                    pointHoverRadius: 7,
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: {
                         display: true,
                         labels: {
-                            font: { size: 12 }
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
                         }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Number of Attempts'
-                        }
+                        ticks: { font: { size: 11 } }
                     },
                     x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
+                        ticks: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // 2. Failed Attempts Chart
+        const failedCtx = document.getElementById('failedAttemptsChart').getContext('2d');
+        new Chart(failedCtx, {
+            type: 'bar',
+            data: {
+                labels: failedChartLabels,
+                datasets: [{
+                    label: 'Failed Attempts',
+                    data: failedChartData,
+                    backgroundColor: [
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: colors.danger,
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
                         }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { font: { size: 11 } }
+                    },
+                    x: {
+                        ticks: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // 3. Success Rate Pie Chart
+        const successRateCtx = document.getElementById('successRateChart').getContext('2d');
+        new Chart(successRateCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Successful', 'Failed'],
+                datasets: [{
+                    data: [successfulLogins, failedLogins],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        colors.success,
+                        colors.danger
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
+                        }
+                    }
+                }
+            }
+        });
+
+        // 4. User Activity Chart
+        const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+        new Chart(userActivityCtx, {
+            type: 'bar',
+            data: {
+                labels: userActivityLabels,
+                datasets: [{
+                    label: 'Number of Sessions',
+                    data: userActivityValues,
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: '#667eea',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { font: { size: 11 } }
+                    },
+                    y: {
+                        ticks: { font: { size: 11 } }
                     }
                 }
             }

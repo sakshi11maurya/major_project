@@ -6,6 +6,7 @@ from config import Config
 from models import db, User, LoginAttempt, Alert, UserActivity, FailedLoginAttempt
 from datetime import datetime, timedelta
 from sqlalchemy import func
+import re
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -14,6 +15,107 @@ db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# Password Strength Checker Utility
+class PasswordStrengthAnalyzer:
+    """Analyzes and provides feedback on password strength"""
+    
+    @staticmethod
+    def check_password_strength(password):
+        """
+        Analyze password strength and return detailed feedback
+        Returns: {
+            'score': int (0-5),
+            'level': str ('weak', 'fair', 'good', 'strong'),
+            'feedback': list of str,
+            'meets_requirements': dict
+        }
+        """
+        score = 0
+        feedback = []
+        meets_requirements = {
+            'length': False,
+            'uppercase': False,
+            'lowercase': False,
+            'number': False,
+            'special': False
+        }
+        
+        # Check length
+        if len(password) >= 8:
+            meets_requirements['length'] = True
+            score += 1
+        else:
+            feedback.append(f"Password is too short. Use at least 8 characters ({len(password)}/8)")
+        
+        # Check uppercase
+        if re.search(r'[A-Z]', password):
+            meets_requirements['uppercase'] = True
+            score += 1
+        else:
+            feedback.append("Add at least one uppercase letter (A-Z)")
+        
+        # Check lowercase
+        if re.search(r'[a-z]', password):
+            meets_requirements['lowercase'] = True
+            score += 1
+        else:
+            feedback.append("Add at least one lowercase letter (a-z)")
+        
+        # Check number
+        if re.search(r'[0-9]', password):
+            meets_requirements['number'] = True
+            score += 1
+        else:
+            feedback.append("Add at least one number (0-9)")
+        
+        # Check special character
+        if re.search(r'[!@#$%^&*()_+\-=\[\]{};:\'\"\\|,.<>\/?]', password):
+            meets_requirements['special'] = True
+            score += 1
+        else:
+            feedback.append("Add at least one special character (!@#$%^&*)")
+        
+        # Extra length bonus
+        if len(password) >= 12:
+            score += 0.5
+        if len(password) >= 16:
+            score += 0.5
+        
+        # Determine level
+        if score >= 4.5:
+            level = 'strong'
+        elif score >= 3.5:
+            level = 'good'
+        elif score >= 2.5:
+            level = 'fair'
+        else:
+            level = 'weak'
+        
+        return {
+            'score': min(score, 5),
+            'level': level,
+            'feedback': feedback,
+            'meets_requirements': meets_requirements
+        }
+    
+    @staticmethod
+    def is_weak_password(password):
+        """Quick check if password is weak"""
+        analysis = PasswordStrengthAnalyzer.check_password_strength(password)
+        return analysis['level'] == 'weak'
+
+@app.route('/api/check-password-strength', methods=['POST'])
+def check_password_strength_api():
+    """API endpoint to check password strength"""
+    data = request.get_json()
+    password = data.get('password', '')
+    
+    if not password:
+        return {'error': 'Password required'}, 400
+    
+    analysis = PasswordStrengthAnalyzer.check_password_strength(password)
+    return analysis, 200
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -38,9 +140,36 @@ def dashboard():
         func.date(LoginAttempt.timestamp)
     ).all()
     
-    # Format data for chart
+    # Format data for login activity chart
     chart_labels = [str(item[0]) for item in daily_logins]
     chart_data = [item[1] for item in daily_logins]
+    
+    # Get failed attempts data for last 7 days
+    daily_failed_logins = db.session.query(
+        func.date(LoginAttempt.timestamp).label('date'),
+        func.count(LoginAttempt.id).label('count')
+    ).filter(
+        LoginAttempt.timestamp >= last_7_days,
+        LoginAttempt.success == False
+    ).group_by(func.date(LoginAttempt.timestamp)).all()
+    
+    failed_chart_labels = [str(item[0]) for item in daily_failed_logins]
+    failed_chart_data = [item[1] for item in daily_failed_logins]
+    
+    # Get user activity data by username for last 7 days
+    user_activity_data = db.session.query(
+        UserActivity.username,
+        func.count(UserActivity.id).label('sessions')
+    ).filter(UserActivity.login_time >= last_7_days).group_by(
+        UserActivity.username
+    ).order_by(func.count(UserActivity.id).desc()).limit(10).all()
+    
+    user_activity_labels = [item[0] for item in user_activity_data]
+    user_activity_values = [item[1] for item in user_activity_data]
+    
+    # Get successful vs failed login ratio
+    successful_logins = LoginAttempt.query.filter_by(success=True).count()
+    failed_logins = LoginAttempt.query.filter_by(success=False).count()
     
     return render_template('dashboard.html', 
                          user=current_user,
@@ -50,7 +179,13 @@ def dashboard():
                          unread_alerts=unread_alerts,
                          alerts=alerts,
                          chart_labels=chart_labels,
-                         chart_data=chart_data)
+                         chart_data=chart_data,
+                         failed_chart_labels=failed_chart_labels,
+                         failed_chart_data=failed_chart_data,
+                         user_activity_labels=user_activity_labels,
+                         user_activity_values=user_activity_values,
+                         successful_logins=successful_logins,
+                         failed_logins=failed_logins)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
