@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Activity Monitoring</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-left">
+            <h1>User Activity Monitoring</h1>
+        </div>
+        <div class="topbar-right">
+            <span class="user-name">{{ user.username }}</span>
+            <span class="user-role">({{ user.role }})</span>
+            <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🟢</div>
+                <div class="stat-content">
+                    <h3>Active Sessions</h3>
+                    <p class="stat-number">{{ total_active_sessions }}</p>
+                    <small>Currently active</small>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <h3>Active Users</h3>
+                    <p class="stat-number">{{ total_users_active }}</p>
+                    <small>Logged in users</small>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3>Total Activities</h3>
+                    <p class="stat-number">{{ activities.total }}</p>
+                    <small>All sessions tracked</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Table -->
+        <div class="activity-section">
+            <div class="section-header">
+                <h2>Session History</h2>
+                <p class="section-subtitle">Track user login, logout, and IP addresses</p>
+            </div>
+
+            <div class="table-container">
+                {% if activities.items %}
+                    <table class="activity-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Login Time</th>
+                                <th>Logout Time</th>
+                                <th>Duration</th>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in activities.items %}
+                            <tr class="activity-row {% if not activity.logout_time %}active-session{% endif %}">
+                                <td class="username-cell">
+                                    <span class="user-badge">{{ activity.username }}</span>
+                                </td>
+                                <td class="time-cell">
+                                    {{ activity.login_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                                </td>
+                                <td class="time-cell">
+                                    {% if activity.logout_time %}
+                                        {{ activity.logout_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="duration-cell">
+                                    <span class="duration-badge">{{ activity.get_duration_display() }}</span>
+                                </td>
+                                <td class="ip-cell">
+                                    <code class="ip-code">{{ activity.ip_address or 'N/A' }}</code>
+                                </td>
+                                <td class="status-cell">
+                                    {% if activity.logout_time %}
+                                        <span class="status-badge status-completed">Completed</span>
+                                    {% else %}
+                                        <span class="status-badge status-active">Active</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">
+                        <p class="empty-icon">📭</p>
+                        <h3>No Activity Records</h3>
+                        <p>No login/logout activities to display at this time.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pagination -->
+            {% if activities.pages > 1 %}
+            <div class="pagination">
+                {% if activities.has_prev %}
+                    <a href="{{ url_for('activity', page=activities.prev_num) }}" class="btn-pagination">← Previous</a>
+                {% else %}
+                    <span class="btn-pagination disabled">← Previous</span>
+                {% endif %}
+
+                <div class="page-numbers">
+                    {% for page_num in activities.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num == activities.page %}
+                                <span class="page-num current">{{ page_num }}</span>
+                            {% else %}
+                                <a href="{{ url_for('activity', page=page_num) }}" class="page-num">{{ page_num }}</a>
+                            {% endif %}
+                        {% else %}
+                            <span class="page-num dots">...</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {% if activities.has_next %}
+                    <a href="{{ url_for('activity', page=activities.next_num) }}" class="btn-pagination">Next →</a>
+                {% else %}
+                    <span class="btn-pagination disabled">Next →</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Information Box -->
+            <div class="info-box">
+                <h4>Activity Monitoring Information</h4>
+                <ul>
+                    <li><strong>Login Time:</strong> Records the exact timestamp when a user logs in to the system.</li>
+                    <li><strong>Logout Time:</strong> Records the timestamp when a user logs out. Shows "-" if session is still active.</li>
+                    <li><strong>Duration:</strong> Shows how long the session lasted. Active sessions update in real-time.</li>
+                    <li><strong>IP Address:</strong> Tracks the source IP address of the login, useful for security audits.</li>
+                    <li><strong>Status:</strong> Shows whether the session is currently active or has been completed.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features-section">
+            <h3>Security & Monitoring Features</h3>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>🔍 Session Tracking</h4>
+                    <p>Monitor all user sessions with precise login and logout timestamps for audit trails.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🌐 IP Monitoring</h4>
+                    <p>Track the IP addresses from which users access the system for security compliance.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⏱️ Duration Analysis</h4>
+                    <p>Analyze session durations to understand system usage patterns and user behavior.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔒 Admin Controls</h4>
+                    <p>Administrators can view all user activities while users see only their own sessions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

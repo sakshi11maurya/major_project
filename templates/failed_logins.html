@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Failed Login Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-left">
+            <h1>🔒 Failed Login Detection</h1>
+        </div>
+        <div class="topbar-right">
+            <span class="user-name">{{ user.username }}</span>
+            <span class="user-role">({{ user.role }})</span>
+            <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Security Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card alert-stat">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-content">
+                    <h3>Failed Attempts (24h)</h3>
+                    <p class="stat-number">{{ total_failed_today }}</p>
+                    <small>Last 24 hours</small>
+                </div>
+            </div>
+
+            <div class="stat-card alert-stat">
+                <div class="stat-icon">👤</div>
+                <div class="stat-content">
+                    <h3>Targeted Usernames</h3>
+                    <p class="stat-number">{{ unique_usernames }}</p>
+                    <small>Unique accounts</small>
+                </div>
+            </div>
+
+            <div class="stat-card alert-stat">
+                <div class="stat-icon">🌐</div>
+                <div class="stat-content">
+                    <h3>Source IPs</h3>
+                    <p class="stat-number">{{ unique_ips }}</p>
+                    <small>Unique addresses</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Failed Login Attempts Table -->
+        <div class="activity-section">
+            <div class="section-header">
+                <h2>Failed Login Attempts (Last 24 Hours)</h2>
+                <p class="section-subtitle">Monitor suspicious login activities and security threats</p>
+            </div>
+
+            <div class="table-container">
+                {% if failed_logins.items %}
+                    <table class="activity-table security-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Username</th>
+                                <th>IP Address</th>
+                                <th>Attempt Count</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in failed_logins.items %}
+                            <tr class="activity-row security-alert">
+                                <td class="time-cell">
+                                    {{ attempt.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                                </td>
+                                <td class="username-cell">
+                                    <span class="user-badge security">{{ attempt.username }}</span>
+                                </td>
+                                <td class="ip-cell">
+                                    <code class="ip-code">{{ attempt.ip_address }}</code>
+                                </td>
+                                <td class="status-cell">
+                                    {% set count = failed_logins.items|selectattr('username', 'equalto', attempt.username)|list|length %}
+                                    {% if count >= 3 %}
+                                        <span class="attempt-badge critical">{{ count }}+ attempts</span>
+                                    {% elif count >= 2 %}
+                                        <span class="attempt-badge warning">{{ count }} attempts</span>
+                                    {% else %}
+                                        <span class="attempt-badge info">{{ count }} attempt</span>
+                                    {% endif %}
+                                </td>
+                                <td class="status-cell">
+                                    {% if count >= 4 %}
+                                        <span class="status-badge status-locked">🔒 LOCKED</span>
+                                    {% elif count >= 3 %}
+                                        <span class="status-badge status-critical">⚠️ CRITICAL</span>
+                                    {% elif count >= 2 %}
+                                        <span class="status-badge status-warning">⚡ WARNING</span>
+                                    {% else %}
+                                        <span class="status-badge status-risk">⚠️ RISK</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">
+                        <p class="empty-icon">✅</p>
+                        <h3>No Failed Login Attempts</h3>
+                        <p>System is secure. No suspicious login activities detected in the last 24 hours.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pagination -->
+            {% if failed_logins.pages > 1 %}
+            <div class="pagination">
+                {% if failed_logins.has_prev %}
+                    <a href="{{ url_for('failed_logins', page=failed_logins.prev_num) }}" class="btn-pagination">← Previous</a>
+                {% else %}
+                    <span class="btn-pagination disabled">← Previous</span>
+                {% endif %}
+
+                <div class="page-numbers">
+                    {% for page_num in failed_logins.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num == failed_logins.page %}
+                                <span class="page-num current">{{ page_num }}</span>
+                            {% else %}
+                                <a href="{{ url_for('failed_logins', page=page_num) }}" class="page-num">{{ page_num }}</a>
+                            {% endif %}
+                        {% else %}
+                            <span class="page-num dots">...</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {% if failed_logins.has_next %}
+                    <a href="{{ url_for('failed_logins', page=failed_logins.next_num) }}" class="btn-pagination">Next →</a>
+                {% else %}
+                    <span class="btn-pagination disabled">Next →</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Security Information -->
+            <div class="info-box security-info">
+                <h4>🔐 Security Alert Policy</h4>
+                <ul>
+                    <li><strong>1-2 Attempts:</strong> <span class="badge-info">LOW RISK</span> - Continue monitoring</li>
+                    <li><strong>3 Attempts:</strong> <span class="badge-warning">WARNING</span> - Account locked for 30 minutes</li>
+                    <li><strong>4+ Attempts:</strong> <span class="badge-critical">CRITICAL</span> - Security alert generated, admin notified</li>
+                    <li><strong>Auto-Reset:</strong> Failed attempts clear automatically after 1 hour or successful login</li>
+                    <li><strong>IP Tracking:</strong> All attempts logged with source IP for forensic analysis</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Security Features Section -->
+        <div class="features-section">
+            <h3>🛡️ Security Monitoring Features</h3>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>🚨 Real-time Detection</h4>
+                    <p>Instantly detect and log failed login attempts across all user accounts.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔒 Account Locking</h4>
+                    <p>Automatically lock accounts after 3 failed attempts to prevent brute force attacks.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Threat Analytics</h4>
+                    <p>Analyze attack patterns by username, IP address, and time to identify threats.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🌐 IP Intelligence</h4>
+                    <p>Track source IPs of failed attempts to identify distributed attack sources.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .alert-stat {
+            border-top-color: #dc3545;
+        }
+
+        .security-table {
+            border: 1px solid #ffebee;
+        }
+
+        .security-alert {
+            border-left: 4px solid #dc3545;
+        }
+
+        .user-badge.security {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .attempt-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .attempt-badge.critical {
+            background: #ffe7e7;
+            color: #dc3545;
+        }
+
+        .attempt-badge.warning {
+            background: #fff3cd;
+            color: #ff9800;
+        }
+
+        .attempt-badge.info {
+            background: #e7f3ff;
+            color: #0066cc;
+        }
+
+        .status-locked {
+            background: #b91c1c;
+            color: white;
+        }
+
+        .status-critical {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-risk {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .security-info {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe7e7 100%);
+            border-left-color: #dc3545;
+        }
+
+        .security-info h4 {
+            color: #dc3545;
+        }
+
+        .badge-info,
+        .badge-warning,
+        .badge-critical {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-info {
+            background: #e7f3ff;
+            color: #0066cc;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #ff9800;
+        }
+
+        .badge-critical {
+            background: #ffe7e7;
+            color: #dc3545;
+        }
+    </style>
+</body>
+</html>
