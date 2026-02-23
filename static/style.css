@@ -806,3 +806,17 @@ button:hover {
 .nav-link:hover {
     opacity: 0.8;
 }
+
+/* .logout-btn{
+     display: flex;
+    justify-content: flex-end;
+     
+} */
+
+.logout-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 15px 12px;
+    font-size: 15px;
+}

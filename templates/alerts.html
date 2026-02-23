@@ -6,10 +6,14 @@
     <title>Document</title>
 </head>
 <body>
-    <h2>Security Alerts</h2>
+   <h2>Security Alerts</h2>
 
-{% for alert in alerts %}
-<p>{{alert.message}} - {{alert.level}}</p>
-{% endfor %}
+{% if alerts %}
+    {% for alert in alerts %}
+        <p>{{ alert.message }} - {{ alert.level }}</p>
+    {% endfor %}
+{% else %}
+    <p>No alerts found.</p>
+{% endif %}
 </body>
 </html>
