@@ -1,200 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Security Management Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-    <div class="topbar">
-        <div class="topbar-left">
+    <div class="container">
+        <div class="header">
             <h1>Cloud Security Management Dashboard</h1>
-        </div>
-        <div class="topbar-right">
-            <span class="user-name">{{ user.username }}</span>
-            <span class="user-role">({{ user.role }})</span>
-            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-        </div>
-    </div>
-
-    <div class="dashboard-container">
-        <!-- Welcome Panel -->
-        <div class="welcome-panel">
-            <h2>Welcome back, {{ user.username }}! 👋</h2>
-            <p>Your security dashboard is up to date. Monitor your system and stay secure.</p>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <!-- Total Users Card -->
-            <div class="stat-card">
-                <div class="stat-icon users-icon">👥</div>
-                <div class="stat-content">
-                    <h3>Total Users</h3>
-                    <p class="stat-number">{{ total_users }}</p>
-                    <small>Active users in system</small>
-                </div>
-            </div>
-
-            <!-- Total Login Attempts Card -->
-            <div class="stat-card">
-                <div class="stat-icon login-icon">🔐</div>
-                <div class="stat-content">
-                    <h3>Login Attempts</h3>
-                    <p class="stat-number">{{ total_login_attempts }}</p>
-                    <small>Failed: {{ failed_attempts }}</small>
-                </div>
-            </div>
-
-            <!-- Alerts Card -->
-            <div class="stat-card">
-                <div class="stat-icon alert-icon">⚠️</div>
-                <div class="stat-content">
-                    <h3>Unread Alerts</h3>
-                    <p class="stat-number">{{ unread_alerts }}</p>
-                    <small>Requires action</small>
-                </div>
-            </div>
-
-            <!-- Monitor Card -->
-            <div class="stat-card action-card">
-                <div class="stat-icon monitor-icon">📊</div>
-                <div class="stat-content">
-                    <h3>System Monitor</h3>
-                    <p>Check resource usage</p>
-                    <a href="{{ url_for('monitor') }}" class="card-link">Monitor Now →</a>
-                </div>
-            </div>
-
-            <!-- Activity Card -->
-            <div class="stat-card action-card">
-                <div class="stat-icon activity-icon">📋</div>
-                <div class="stat-content">
-                    <h3>User Activity</h3>
-                    <p>View session tracking</p>
-                    <a href="{{ url_for('activity') }}" class="card-link">View Activity →</a>
-                </div>
-            </div>
-
-            <!-- Failed Logins Card (Admin Only) -->
-            {% if user.role == 'admin' %}
-            <div class="stat-card action-card">
-                <div class="stat-icon security-icon">🔒</div>
-                <div class="stat-content">
-                    <h3>Failed Logins</h3>
-                    <p>Security monitoring</p>
-                    <a href="{{ url_for('failed_logins') }}" class="card-link">View Threats →</a>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Main Content Area -->
-        <div class="main-content">
-            <!-- Activity Chart -->
-            <div class="chart-container">
-                <h3>Login Activity (Last 7 Days)</h3>
-                <canvas id="activityChart"></canvas>
-            </div>
-
-            <!-- Alerts Section -->
-            <div class="alerts-section">
-                <h3>Latest Alerts</h3>
-                <div class="alerts-list">
-                    {% if alerts %}
-                        {% for alert in alerts %}
-                        <div class="alert-item alert-{{ alert.level }}">
-                            <div class="alert-header">
-                                <span class="alert-level">{{ alert.level.upper() }}</span>
-                                <span class="alert-time">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                            </div>
-                            <p class="alert-message">{{ alert.message }}</p>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="no-alerts">No alerts at this time.</p>
-                    {% endif %}
-                </div>
+            <div class="user-info">
+                <p>Hello, {{ user.username }}! You are logged in as {{ user.role }}.</p>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
             </div>
         </div>
 
-        <!-- Features Section -->
-        <div class="features-section">
-            <h3>Security Features</h3>
+
+
+
+
+        <div class="dashboard-content">
+            <h2>Security Features</h2>
             <div class="features-grid">
                 <div class="feature-card">
-                    <h4>🔍 Real-time Monitoring</h4>
-                    <p>Monitor your cloud infrastructure with automated alerts and comprehensive reporting.</p>
+                    <h3> Monitor Cloud Resources</h3>
+                    <p>Real-time monitoring of your cloud infrastructure with automated alerts and comprehensive
+                        reporting.</p>
+                    <a href="{{ url_for('monitor') }}">
+                        <button>Check Usage</button>
+                    </a>
+                </div>
+
+
+                <div class="feature-card">
+                    <h3>Security Alerts</h3>
+                    <p>Advanced threat detection and instant notifications for potential security breaches and
+                        vulnerabilities.</p>
+                        <a href="{{ url_for('alerts') }}">
+                        <button>Check Security</button>
+                    </a>
                 </div>
                 <div class="feature-card">
-                    <h4>🛡️ Threat Detection</h4>
-                    <p>Advanced threat detection and instant notifications for potential security breaches.</p>
+                    <h3>Compliance Checks</h3>
+                    <p>Automated compliance monitoring against industry standards like GDPR, HIPAA, and SOC 2.</p>
                 </div>
                 <div class="feature-card">
-                    <h4>✅ Compliance Checks</h4>
-                    <p>Automated compliance monitoring against industry standards like GDPR and HIPAA.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>👤 Access Control</h4>
-                    <p>Role-based access control and identity management for secure resource access.</p>
+                    <h3>Access Management</h3>
+                    <p>Role-based access control and identity management for secure resource access and administration.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-        // Prepare chart data
-        const chartLabels = {{ chart_labels | tojson }};
-        const chartData = {{ chart_data | tojson }};
-
-        // Create chart
-        const ctx = document.getElementById('activityChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartLabels,
-                datasets: [{
-                    label: 'Login Attempts',
-                    data: chartData,
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#007bff',
-                    pointBorderColor: '#fff',
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            font: { size: 12 }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Number of Attempts'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    }
-                }
-            }
-        });
-    </script>
 </body>
+
 </html>
