@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+   <h2>Security Alerts</h2>
+
+{% if alerts %}
+    {% for alert in alerts %}
+        <p class="alert-{{ alert.level | lower }}">{{ alert.message }} - {{ alert.level }}</p>
+    {% endfor %}
+{% else %}
+    <p>No alerts found.</p>
+{% endif %}
+</body>
+</html>

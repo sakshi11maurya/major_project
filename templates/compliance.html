@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compliance Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        h2 { color: #2c3e50; }
+        ul { list-style-type: none; padding: 0; }
+        li { background: #fff; margin: 5px 0; padding: 10px; border-left: 5px solid #3498db; }
+        .issue { border-left-color: #e74c3c; }
+        .success { border-left-color: #2ecc71; }
+        a { display: inline-block; margin-top: 20px; text-decoration: none; color: #3498db; }
+    </style>
+</head>
+<body>
+    <h2>Compliance Check Report</h2>
+    <ul>
+        {% for issue in issues %}
+            {% if "passed" in issue %}
+                <li class="success">{{ issue }}</li>
+            {% else %}
+                <li class="issue">⚠ {{ issue }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

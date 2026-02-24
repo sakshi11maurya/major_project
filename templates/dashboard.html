@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Security Management Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Chart.js for rendering dashboards -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-    <div class="topbar">
+    <!-- unified top navigation bar -->
+    <header class="topbar">
         <div class="topbar-left">
             <h1>Cloud Security Management Dashboard</h1>
         </div>
@@ -17,7 +21,7 @@
             <span class="user-role">({{ user.role }})</span>
             <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
         </div>
-    </div>
+    </header>
 
     <div class="dashboard-container">
         <!-- Welcome Panel -->
@@ -153,7 +157,7 @@
                 <div class="alerts-list">
                     {% if alerts %}
                         {% for alert in alerts %}
-                        <div class="alert-item alert-{{ alert.level }}">
+                        <div class="alert-item alert-{{ alert.level | lower }}">
                             <div class="alert-header">
                                 <span class="alert-level">{{ alert.level.upper() }}</span>
                                 <span class="alert-time">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
@@ -165,43 +169,58 @@
                         <p class="no-alerts">No alerts at this time.</p>
                     {% endif %}
                 </div>
-            </div>
-        </div>
 
-        <!-- Features Section -->
-        <div class="features-section">
-            <h3>Security Features</h3>
+
+
+
+
+        <div class="dashboard-content">
+            <h2>Security Features</h2>
             <div class="features-grid">
                 <div class="feature-card">
-                    <h4>🔍 Real-time Monitoring</h4>
-                    <p>Monitor your cloud infrastructure with automated alerts and comprehensive reporting.</p>
+                    <h3> Monitor Cloud Resources</h3>
+                    <p>Real-time monitoring of your cloud infrastructure with automated alerts and comprehensive
+                        reporting.</p>
+                    <a href="{{ url_for('monitor') }}">
+                        <button>Check Usage</button>
+                    </a>
+                </div>
+
+
+                <div class="feature-card">
+                    <h3>Security Alerts</h3>
+                    <p>Advanced threat detection and instant notifications for potential security breaches and
+                        vulnerabilities.</p>
+                        <a href="{{ url_for('alerts') }}">
+                        <button>Check Security</button>
+                    </a>
                 </div>
                 <div class="feature-card">
-                    <h4>🛡️ Threat Detection</h4>
-                    <p>Advanced threat detection and instant notifications for potential security breaches.</p>
+                    <h3>Compliance Checks</h3>
+                    <p>Automated compliance monitoring against industry standards like GDPR, HIPAA, and SOC 2.</p>
+                     <a href="{{ url_for('compliance_check') }}">
+                        <button>Run Compliance Check</button>
+                    </a>
                 </div>
                 <div class="feature-card">
-                    <h4>✅ Compliance Checks</h4>
-                    <p>Automated compliance monitoring against industry standards like GDPR and HIPAA.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>👤 Access Control</h4>
-                    <p>Role-based access control and identity management for secure resource access.</p>
+                    <h3>Access Management</h3>
+                    <p>Role-based access control and identity management for secure resource access and administration.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Prepare chart data
-        const chartLabels = {{ chart_labels | tojson }};
-        const chartData = {{ chart_data | tojson }};
-        const failedChartLabels = {{ failed_chart_labels | tojson }};
-        const failedChartData = {{ failed_chart_data | tojson }};
-        const userActivityLabels = {{ user_activity_labels | tojson }};
-        const userActivityValues = {{ user_activity_values | tojson }};
-        const successfulLogins = {{ successful_logins }};
-        const failedLogins = {{ failed_logins }};
+        // Prepare chart data (ensure arrays exist)
+        const chartLabels = {{ chart_labels | default([]) | tojson }};
+        const chartData = {{ chart_data | default([]) | tojson }};
+        const failedChartLabels = {{ failed_chart_labels | default([]) | tojson }};
+        const failedChartData = {{ failed_chart_data | default([]) | tojson }};
+        const userActivityLabels = {{ user_activity_labels | default([]) | tojson }};
+        const userActivityValues = {{ user_activity_values | default([]) | tojson }};
+        const successfulLogins = {{ successful_logins | default(0) }};
+        const failedLogins = {{ failed_logins | default(0) }};
 
         // Color scheme
         const colors = {
@@ -378,4 +397,5 @@
         });
     </script>
 </body>
+
 </html>

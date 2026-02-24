@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="login-container">
-        <h1>🔐 Cloud Security Management</h1>
+        <h1>Cloud Security Management</h1>
         <p class="login-subtitle">Secure Authentication System</p>
         
         {% with messages = get_flashed_messages() %}
@@ -16,11 +16,11 @@
                 <div class="alerts-box">
                     {% for message in messages %}
                         {% if 'locked' in message.lower() or 'multiple' in message.lower() %}
-                            <div class="alert alert-critical">⛔ {{ message }}</div>
+                            <div class="alert alert-critical">{{ message }}</div>
                         {% elif 'attempts remaining' in message.lower() %}
-                            <div class="alert alert-warning">⚠️ {{ message }}</div>
+                            <div class="alert alert-warning">{{ message }}</div>
                         {% else %}
-                            <div class="alert alert-error">❌ {{ message }}</div>
+                            <div class="alert alert-error">{{ message }}</div>
                         {% endif %}
                     {% endfor %}
                 </div>
@@ -28,6 +28,7 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('login') }}" class="login-form">
+            <!-- simplified login form for professional look -->
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required placeholder="Enter your username">
@@ -36,7 +37,7 @@
                 <label for="password">Password</label>
                 <div class="password-input-wrapper">
                     <input type="password" id="password" name="password" required placeholder="Enter your password">
-                    <span class="password-toggle" id="passwordToggle" title="Show/Hide Password">👁️</span>
+                    <span class="password-toggle" id="passwordToggle" title="Show/Hide Password">Show</span>
                 </div>
                 
                 <!-- Password Strength Indicator -->
@@ -104,9 +105,24 @@
     </div>
 
     <style>
+        /* professional login styling adjustments */
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .login-container h1 {
+            font-size: 1.6em;
+            margin-bottom: 0.5em;
+            color: #2e3a46;
+            text-align: center;
+        }
         .login-subtitle {
             text-align: center;
-            color: #666;
+            color: #555;
             margin-bottom: 20px;
             font-size: 0.95em;
         }
@@ -131,11 +147,13 @@
             border-left-color: #c62828;
         }
 
+
         .alert-warning {
             background: #fff3cd;
             color: #856404;
             border-left-color: #ffb300;
         }
+
 
         .alert-critical {
             background: #ffe7e7;
@@ -143,6 +161,7 @@
             border-left-color: #dc3545;
             animation: shake 0.5s ease-in-out;
         }
+
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -152,6 +171,39 @@
 
         .login-form {
             margin: 20px 0;
+        }
+        .login-form .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+        .login-form input:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .submit-btn {
+            width: 100%;
+            background: #3b82f6;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover {
+            background: #2563eb;
         }
 
         /* Password Input Wrapper */
