@@ -10,7 +10,7 @@
 
 {% if alerts %}
     {% for alert in alerts %}
-        <p>{{ alert.message }} - {{ alert.level }}</p>
+        <p class="alert-{{ alert.level | lower }}">{{ alert.message }} - {{ alert.level }}</p>
     {% endfor %}
 {% else %}
     <p>No alerts found.</p>

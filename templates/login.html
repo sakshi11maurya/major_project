@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="login-container">
-        <h1>🔐 Cloud Security Management</h1>
+        <h1>Cloud Security Management</h1>
         <p class="login-subtitle">Secure Authentication System</p>
         
         {% with messages = get_flashed_messages() %}
@@ -16,11 +16,11 @@
                 <div class="alerts-box">
                     {% for message in messages %}
                         {% if 'locked' in message.lower() or 'multiple' in message.lower() %}
-                            <div class="alert alert-critical">⛔ {{ message }}</div>
+                            <div class="alert alert-critical">{{ message }}</div>
                         {% elif 'attempts remaining' in message.lower() %}
-                            <div class="alert alert-warning">⚠️ {{ message }}</div>
+                            <div class="alert alert-warning">{{ message }}</div>
                         {% else %}
-                            <div class="alert alert-error">❌ {{ message }}</div>
+                            <div class="alert alert-error">{{ message }}</div>
                         {% endif %}
                     {% endfor %}
                 </div>
@@ -28,13 +28,69 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('login') }}" class="login-form">
+            <!-- simplified login form for professional look -->
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required placeholder="Enter your username">
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="Enter your password">
+                <div class="password-input-wrapper">
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <span class="password-toggle" id="passwordToggle" title="Show/Hide Password">Show</span>
+                </div>
+                
+                <!-- Password Strength Indicator -->
+                <div class="password-strength-container">
+                    <div class="password-strength-meter">
+                        <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                    </div>
+                    <span class="password-strength-text" id="passwordStrengthText">Password strength: None</span>
+                </div>
+
+                <!-- Password Requirements Checklist -->
+                <div class="password-requirements">
+                    <h4>Password Requirements:</h4>
+                    <ul class="requirements-list">
+                        <li class="requirement" id="req-length">
+                            <span class="req-icon">✗</span>
+                            <span class="req-text">At least 8 characters</span>
+                        </li>
+                        <li class="requirement" id="req-uppercase">
+                            <span class="req-icon">✗</span>
+                            <span class="req-text">At least one uppercase letter (A-Z)</span>
+                        </li>
+                        <li class="requirement" id="req-lowercase">
+                            <span class="req-icon">✗</span>
+                            <span class="req-text">At least one lowercase letter (a-z)</span>
+                        </li>
+                        <li class="requirement" id="req-number">
+                            <span class="req-icon">✗</span>
+                            <span class="req-text">At least one number (0-9)</span>
+                        </li>
+                        <li class="requirement" id="req-special">
+                            <span class="req-icon">✗</span>
+                            <span class="req-text">At least one special character (!@#$%^&*)</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Strong Password Suggestion -->
+                <div class="password-suggestion" id="passwordSuggestion" style="display: none;">
+                    <h4>💡 Strong Password Suggestion:</h4>
+                    <div class="suggested-password" id="suggestedPassword">
+                        <code id="suggestedPasswordCode">Generating...</code>
+                        <button type="button" class="copy-btn" id="copySuggestion" title="Copy suggestion">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Warning Messages -->
+                <div class="password-warnings" id="passwordWarnings" style="display: none;">
+                    <div class="warning-item" id="weakWarning" style="display: none;">
+                        <span>⚠️ Weak password detected!</span>
+                        <p>This password may be easily guessed. Consider using a stronger password with uppercase, lowercase, numbers, and special characters.</p>
+                    </div>
+                </div>
             </div>
             <button type="submit" class="submit-btn">Login</button>
         </form>
@@ -49,9 +105,24 @@
     </div>
 
     <style>
+        /* professional login styling adjustments */
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .login-container h1 {
+            font-size: 1.6em;
+            margin-bottom: 0.5em;
+            color: #2e3a46;
+            text-align: center;
+        }
         .login-subtitle {
             text-align: center;
-            color: #666;
+            color: #555;
             margin-bottom: 20px;
             font-size: 0.95em;
         }
@@ -76,11 +147,13 @@
             border-left-color: #c62828;
         }
 
+
         .alert-warning {
             background: #fff3cd;
             color: #856404;
             border-left-color: #ffb300;
         }
+
 
         .alert-critical {
             background: #ffe7e7;
@@ -88,6 +161,7 @@
             border-left-color: #dc3545;
             animation: shake 0.5s ease-in-out;
         }
+
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -98,6 +172,260 @@
         .login-form {
             margin: 20px 0;
         }
+        .login-form .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+        .login-form input:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .submit-btn {
+            width: 100%;
+            background: #3b82f6;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover {
+            background: #2563eb;
+        }
+
+        /* Password Input Wrapper */
+        .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input-wrapper input {
+            flex: 1;
+            padding-right: 40px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            cursor: pointer;
+            font-size: 1.2em;
+            user-select: none;
+            transition: opacity 0.2s;
+        }
+
+        .password-toggle:hover {
+            opacity: 0.7;
+        }
+
+        /* Password Strength Meter */
+        .password-strength-container {
+            margin-top: 10px;
+        }
+
+        .password-strength-meter {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background: #ccc;
+        }
+
+        .password-strength-bar.weak {
+            width: 25%;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+        }
+
+        .password-strength-bar.fair {
+            width: 50%;
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+        }
+
+        .password-strength-bar.good {
+            width: 75%;
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .password-strength-text {
+            font-size: 0.9em;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .password-strength-text.weak {
+            color: #ff6b6b;
+        }
+
+        .password-strength-text.fair {
+            color: #ffc107;
+        }
+
+        .password-strength-text.good {
+            color: #2196f3;
+        }
+
+        .password-strength-text.strong {
+            color: #28a745;
+        }
+
+        /* Password Requirements */
+        .password-requirements {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .password-requirements h4 {
+            margin: 0 0 12px 0;
+            font-size: 0.95em;
+            color: #2c3e50;
+        }
+
+        .requirements-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .req-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #999;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        .requirement.met {
+            color: #28a745;
+        }
+
+        .requirement.met .req-icon {
+            background: #d4edda;
+            color: #28a745;
+        }
+
+        /* Password Suggestion */
+        .password-suggestion {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 12px;
+            border-left: 4px solid #28a745;
+        }
+
+        .password-suggestion h4 {
+            margin: 0 0 12px 0;
+            font-size: 0.95em;
+            color: #1b5e20;
+        }
+
+        .suggested-password {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #c8e6c9;
+        }
+
+        .suggested-password code {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1b5e20;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            padding: 6px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: #20c997;
+            transform: scale(1.05);
+        }
+
+        /* Password Warnings */
+        .password-warnings {
+            margin-top: 12px;
+        }
+
+        .warning-item {
+            background: #fff3cd;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .warning-item span {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .warning-item p {
+            margin: 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
 
         .submit-btn {
             width: 100%;
@@ -153,5 +481,196 @@
             font-weight: 600;
         }
     </style>
+
+    <script>
+        // Password Strength Checker
+        class PasswordStrengthChecker {
+            constructor() {
+                this.passwordInput = document.getElementById('password');
+                this.strengthBar = document.getElementById('passwordStrengthBar');
+                this.strengthText = document.getElementById('passwordStrengthText');
+                this.requirementsList = {
+                    length: document.getElementById('req-length'),
+                    uppercase: document.getElementById('req-uppercase'),
+                    lowercase: document.getElementById('req-lowercase'),
+                    number: document.getElementById('req-number'),
+                    special: document.getElementById('req-special')
+                };
+                this.weakWarning = document.getElementById('weakWarning');
+                this.passwordWarnings = document.getElementById('passwordWarnings');
+                this.passwordSuggestion = document.getElementById('passwordSuggestion');
+                this.toggleBtn = document.getElementById('passwordToggle');
+
+                this.init();
+            }
+
+            init() {
+                this.passwordInput.addEventListener('input', () => this.checkStrength());
+                this.toggleBtn.addEventListener('click', () => this.togglePasswordVisibility());
+            }
+
+            togglePasswordVisibility() {
+                const isPassword = this.passwordInput.type === 'password';
+                this.passwordInput.type = isPassword ? 'text' : 'password';
+                this.toggleBtn.textContent = isPassword ? '🙈' : '👁️';
+            }
+
+            checkStrength() {
+                const password = this.passwordInput.value;
+                
+                if (!password) {
+                    this.resetDisplay();
+                    return;
+                }
+
+                const checks = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+                };
+
+                // Update requirement indicators
+                this.updateRequirements(checks);
+
+                // Calculate strength
+                const strength = this.calculateStrength(checks, password);
+
+                // Update UI
+                this.updateStrengthDisplay(strength);
+
+                // Show warnings if weak
+                if (strength.level === 'weak') {
+                    this.passwordWarnings.style.display = 'block';
+                    this.weakWarning.style.display = 'block';
+                } else {
+                    this.passwordWarnings.style.display = 'none';
+                }
+
+                // Show suggestion if password is strong
+                if (strength.level === 'strong') {
+                    this.showSuggestion();
+                } else {
+                    this.passwordSuggestion.style.display = 'none';
+                }
+            }
+
+            updateRequirements(checks) {
+                Object.entries(checks).forEach(([key, met]) => {
+                    const element = this.requirementsList[key];
+                    if (met) {
+                        element.classList.add('met');
+                        element.querySelector('.req-icon').textContent = '✓';
+                    } else {
+                        element.classList.remove('met');
+                        element.querySelector('.req-icon').textContent = '✗';
+                    }
+                });
+            }
+
+            calculateStrength(checks, password) {
+                let score = 0;
+                const requiredChecks = [checks.length, checks.uppercase, checks.lowercase, checks.number, checks.special];
+                score = requiredChecks.filter(Boolean).length;
+
+                // Length boost
+                if (password.length >= 12) score += 0.5;
+                if (password.length >= 16) score += 0.5;
+
+                // Variety check
+                const hasNumbers = /[0-9]/.test(password);
+                const hasSymbols = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+                if (hasNumbers && hasSymbols) score += 0.5;
+
+                // Determine level
+                let level = 'weak';
+                if (score >= 4.5) level = 'strong';
+                else if (score >= 3.5) level = 'good';
+                else if (score >= 2.5) level = 'fair';
+
+                return { level, score };
+            }
+
+            updateStrengthDisplay(strength) {
+                const { level } = strength;
+
+                // Remove all classes
+                ['weak', 'fair', 'good', 'strong'].forEach(cls => {
+                    this.strengthBar.classList.remove(cls);
+                    this.strengthText.classList.remove(cls);
+                });
+
+                // Add current class
+                this.strengthBar.classList.add(level);
+                this.strengthText.classList.add(level);
+
+                // Update text
+                const texts = {
+                    weak: 'Password strength: Weak ⚠️',
+                    fair: 'Password strength: Fair',
+                    good: 'Password strength: Good 👍',
+                    strong: 'Password strength: Strong 💪'
+                };
+
+                this.strengthText.textContent = texts[level];
+            }
+
+            showSuggestion() {
+                const suggestion = this.generateStrongPassword();
+                document.getElementById('suggestedPasswordCode').textContent = suggestion;
+                this.passwordSuggestion.style.display = 'block';
+                
+                document.getElementById('copySuggestion').onclick = () => {
+                    navigator.clipboard.writeText(suggestion).then(() => {
+                        const btn = document.getElementById('copySuggestion');
+                        const originalText = btn.textContent;
+                        btn.textContent = '✓ Copied!';
+                        setTimeout(() => {
+                            btn.textContent = originalText;
+                        }, 2000);
+                    });
+                };
+            }
+
+            generateStrongPassword() {
+                const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+                const numbers = '0123456789';
+                const special = '!@#$%^&*';
+
+                let password = '';
+                password += uppercase[Math.floor(Math.random() * uppercase.length)];
+                password += lowercase[Math.floor(Math.random() * lowercase.length)];
+                password += numbers[Math.floor(Math.random() * numbers.length)];
+                password += special[Math.floor(Math.random() * special.length)];
+
+                const allChars = uppercase + lowercase + numbers + special;
+                for (let i = password.length; i < 12; i++) {
+                    password += allChars[Math.floor(Math.random() * allChars.length)];
+                }
+
+                return password.split('').sort(() => Math.random() - 0.5).join('');
+            }
+
+            resetDisplay() {
+                this.strengthBar.className = 'password-strength-bar';
+                this.strengthText.className = 'password-strength-text';
+                this.strengthText.textContent = 'Password strength: None';
+                this.passwordWarnings.style.display = 'none';
+                this.passwordSuggestion.style.display = 'none';
+
+                Object.values(this.requirementsList).forEach(element => {
+                    element.classList.remove('met');
+                    element.querySelector('.req-icon').textContent = '✗';
+                });
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            new PasswordStrengthChecker();
+        });
+    </script>
 </body>
 </html>

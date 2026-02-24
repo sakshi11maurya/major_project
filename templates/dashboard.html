@@ -6,17 +6,169 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Security Management Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Chart.js for rendering dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
+    <!-- unified top navigation bar -->
+    <header class="topbar">
+        <div class="topbar-left">
             <h1>Cloud Security Management Dashboard</h1>
-            <div class="user-info">
-                <p>Hello, {{ user.username }}! You are logged in as {{ user.role }}.</p>
-                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+        <div class="topbar-right">
+            <span class="user-name">{{ user.username }}</span>
+            <span class="user-role">({{ user.role }})</span>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- Welcome Panel -->
+        <div class="welcome-panel">
+            <h2>Welcome back, {{ user.username }}! 👋</h2>
+            <p>Your security dashboard is up to date. Monitor your system and stay secure.</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <!-- Total Users Card -->
+            <div class="stat-card">
+                <div class="stat-icon users-icon">👥</div>
+                <div class="stat-content">
+                    <h3>Total Users</h3>
+                    <p class="stat-number">{{ total_users }}</p>
+                    <small>Active users in system</small>
+                </div>
+            </div>
+
+            <!-- Total Login Attempts Card -->
+            <div class="stat-card">
+                <div class="stat-icon login-icon">🔐</div>
+                <div class="stat-content">
+                    <h3>Login Attempts</h3>
+                    <p class="stat-number">{{ total_login_attempts }}</p>
+                    <small>Failed: {{ failed_attempts }}</small>
+                </div>
+            </div>
+
+            <!-- Success Rate Card -->
+            <div class="stat-card">
+                <div class="stat-icon success-icon">✅</div>
+                <div class="stat-content">
+                    <h3>Success Rate</h3>
+                    <p class="stat-number">{% if total_login_attempts > 0 %}{{ ((successful_logins / total_login_attempts) * 100) | int }}%{% else %}0%{% endif %}</p>
+                    <small>Overall login success</small>
+                </div>
+            </div>
+
+            <!-- Alerts Card -->
+            <div class="stat-card">
+                <div class="stat-icon alert-icon">⚠️</div>
+                <div class="stat-content">
+                    <h3>Unread Alerts</h3>
+                    <p class="stat-number">{{ unread_alerts }}</p>
+                    <small>Requires action</small>
+                </div>
+            </div>
+
+            <!-- Monitor Card -->
+            <div class="stat-card action-card">
+                <div class="stat-icon monitor-icon">📊</div>
+                <div class="stat-content">
+                    <h3>System Monitor</h3>
+                    <p>Check resource usage</p>
+                    <a href="{{ url_for('monitor') }}" class="card-link">Monitor Now →</a>
+                </div>
+            </div>
+
+            <!-- Activity Card -->
+            <div class="stat-card action-card">
+                <div class="stat-icon activity-icon">📋</div>
+                <div class="stat-content">
+                    <h3>User Activity</h3>
+                    <p>View session tracking</p>
+                    <a href="{{ url_for('activity') }}" class="card-link">View Activity →</a>
+                </div>
+            </div>
+
+            <!-- Failed Logins Card (Admin Only) -->
+            {% if user.role == 'admin' %}
+            <div class="stat-card action-card">
+                <div class="stat-icon security-icon">🔒</div>
+                <div class="stat-content">
+                    <h3>Failed Logins</h3>
+                    <p>Security monitoring</p>
+                    <a href="{{ url_for('failed_logins') }}" class="card-link">View Threats →</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <h2 class="section-title">📊 Analytics & Reports</h2>
+            
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Login Activity Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>📈 Login Activity (Last 7 Days)</h3>
+                        <span class="chart-badge">Active Monitoring</span>
+                    </div>
+                    <canvas id="activityChart"></canvas>
+                </div>
+
+                <!-- Failed Attempts Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>⚠️ Failed Login Attempts (Last 7 Days)</h3>
+                        <span class="chart-badge danger">Security Alert</span>
+                    </div>
+                    <canvas id="failedAttemptsChart"></canvas>
+                </div>
+
+                <!-- Success vs Failed Pie Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>🎯 Login Success Rate</h3>
+                        <span class="chart-badge">Overall Performance</span>
+                    </div>
+                    <canvas id="successRateChart"></canvas>
+                </div>
+
+                <!-- User Activity Bar Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>👤 Top Active Users (Last 7 Days)</h3>
+                        <span class="chart-badge">Activity Tracking</span>
+                    </div>
+                    <canvas id="userActivityChart"></canvas>
+                </div>
             </div>
         </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Alerts Section -->
+            <div class="alerts-section">
+                <h3>Latest Alerts</h3>
+                <div class="alerts-list">
+                    {% if alerts %}
+                        {% for alert in alerts %}
+                        <div class="alert-item alert-{{ alert.level | lower }}">
+                            <div class="alert-header">
+                                <span class="alert-level">{{ alert.level.upper() }}</span>
+                                <span class="alert-time">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                            <p class="alert-message">{{ alert.message }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-alerts">No alerts at this time.</p>
+                    {% endif %}
+                </div>
 
 
 
@@ -58,6 +210,192 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Prepare chart data (ensure arrays exist)
+        const chartLabels = {{ chart_labels | default([]) | tojson }};
+        const chartData = {{ chart_data | default([]) | tojson }};
+        const failedChartLabels = {{ failed_chart_labels | default([]) | tojson }};
+        const failedChartData = {{ failed_chart_data | default([]) | tojson }};
+        const userActivityLabels = {{ user_activity_labels | default([]) | tojson }};
+        const userActivityValues = {{ user_activity_values | default([]) | tojson }};
+        const successfulLogins = {{ successful_logins | default(0) }};
+        const failedLogins = {{ failed_logins | default(0) }};
+
+        // Color scheme
+        const colors = {
+            primary: '#007bff',
+            danger: '#dc3545',
+            success: '#28a745',
+            warning: '#ffc107',
+            info: '#17a2b8'
+        };
+
+        // 1. Login Activity Chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Total Login Attempts',
+                    data: chartData,
+                    borderColor: colors.primary,
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: colors.primary,
+                    pointBorderColor: '#fff',
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { font: { size: 11 } }
+                    },
+                    x: {
+                        ticks: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // 2. Failed Attempts Chart
+        const failedCtx = document.getElementById('failedAttemptsChart').getContext('2d');
+        new Chart(failedCtx, {
+            type: 'bar',
+            data: {
+                labels: failedChartLabels,
+                datasets: [{
+                    label: 'Failed Attempts',
+                    data: failedChartData,
+                    backgroundColor: [
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: colors.danger,
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { font: { size: 11 } }
+                    },
+                    x: {
+                        ticks: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // 3. Success Rate Pie Chart
+        const successRateCtx = document.getElementById('successRateChart').getContext('2d');
+        new Chart(successRateCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Successful', 'Failed'],
+                datasets: [{
+                    data: [successfulLogins, failedLogins],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        colors.success,
+                        colors.danger
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
+                        }
+                    }
+                }
+            }
+        });
+
+        // 4. User Activity Chart
+        const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+        new Chart(userActivityCtx, {
+            type: 'bar',
+            data: {
+                labels: userActivityLabels,
+                datasets: [{
+                    label: 'Number of Sessions',
+                    data: userActivityValues,
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: '#667eea',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { font: { size: 11 } }
+                    },
+                    y: {
+                        ticks: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>
