@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Access Logs</title>
+</head>
+<body>
+    <h2>Access Management - Login Activity Logs</h2>
+
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Username</th>
+            <th>IP Address</th>
+            <th>Login Time</th>
+            <th>Logout Time</th>
+        </tr>
+
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.username }}</td>
+            <td>{{ log.ip_address }}</td>
+            <td>{{ log.login_time }}</td>
+            <td>
+                {% if log.logout_time %}
+                    {{ log.logout_time }}
+                {% else %}
+                    Active Session
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

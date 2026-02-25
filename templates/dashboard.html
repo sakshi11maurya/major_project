@@ -206,6 +206,11 @@
                     <h3>Access Management</h3>
                     <p>Role-based access control and identity management for secure resource access and administration.
                     </p>
+                    {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('access_logs') }}">Access Logs</a>
+               {% endif %}
+              
+               
                 </div>
             </div>
         </div>

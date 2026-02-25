@@ -1,6 +1,11 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
+<<<<<<< HEAD
+=======
+import models
+from models import db, LoginActivity
+>>>>>>> c99a202 (Implemented Access Management with Role-Based Access Control, Login Activity Tracking and limited access logs to 100 records for performance optimization)
 from datetime import datetime, timedelta
 from sqlalchemy import func
 import re
@@ -14,7 +19,7 @@ from models import db, User, LoginAttempt, Alert, UserActivity
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Initialize DB
+# ---------------- INIT DB ----------------
 models.db.init_app(app)
 
 # ---------------- LOGIN MANAGER ----------------
@@ -211,6 +216,7 @@ def login():
 
         if user and user.check_password(password):
             login_user(user)
+<<<<<<< HEAD
             success = True
             # record successful attempt
             attempt = LoginAttempt(username=username, success=True, timestamp=datetime.utcnow(), ip_address=request.remote_addr)
@@ -222,6 +228,18 @@ def login():
                                      ip_address=request.remote_addr)
             models.db.session.add(activity)
             models.db.session.commit()
+=======
+
+            # 🔐 SAVE LOGIN ACTIVITY
+            activity = LoginActivity(
+                username=user.username,
+                ip_address=request.remote_addr
+            )
+
+            db.session.add(activity)
+            db.session.commit()
+
+>>>>>>> c99a202 (Implemented Access Management with Role-Based Access Control, Login Activity Tracking and limited access logs to 100 records for performance optimization)
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid username or password')
@@ -236,15 +254,29 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+<<<<<<< HEAD
     # update the most recent activity for this user
     last_activity = UserActivity.query.filter_by(user_id=current_user.id, logout_time=None).order_by(UserActivity.login_time.desc()).first()
     if last_activity:
         last_activity.logout_time = datetime.utcnow()
         models.db.session.commit()
+=======
+
+    # 🔐 UPDATE LOGOUT TIME
+    activity = LoginActivity.query.filter_by(
+        username=current_user.username,
+        logout_time=None
+    ).order_by(LoginActivity.login_time.desc()).first()
+
+    if activity:
+        activity.logout_time = datetime.utcnow()
+        db.session.commit()
+>>>>>>> c99a202 (Implemented Access Management with Role-Based Access Control, Login Activity Tracking and limited access logs to 100 records for performance optimization)
 
     logout_user()
     return redirect(url_for('login'))
 
+<<<<<<< HEAD
 # ---------------- ACTIVITY ----------------
 @app.route('/activity')
 @login_required
@@ -289,6 +321,21 @@ def failed_logins():
                            unique_ips=unique_ips)
 
 # ---------------- MONITOR ----------------
+=======
+# ---------------- ACCESS LOGS (ADMIN ONLY) ----------------
+@app.route('/access_logs')
+@login_required
+def access_logs():
+    if current_user.role != 'admin':
+        abort(403)
+
+    logs = LoginActivity.query.order_by(
+        LoginActivity.login_time.desc()
+    ).limit(10).all()
+
+    return render_template('access_logs.html', logs=logs)
+
+>>>>>>> c99a202 (Implemented Access Management with Role-Based Access Control, Login Activity Tracking and limited access logs to 100 records for performance optimization)
 # ---------------- MONITOR ----------------
 @app.route('/monitor')
 @login_required
@@ -296,7 +343,6 @@ def monitor():
     cpu = psutil.cpu_percent(interval=1)
     ram = psutil.virtual_memory().percent
     disk = psutil.disk_usage('/').percent
-
     return render_template('monitor.html', cpu=cpu, ram=ram, disk=disk)
 
 # ---------------- ADMIN ----------------
@@ -315,6 +361,7 @@ def alerts():
     all_alerts = models.Alert.query.all()
     return render_template('alerts.html', alerts=all_alerts)
 
+# ---------------- COMPLIANCE ----------------
 @app.route('/compliance')
 @login_required
 def compliance_check():
@@ -325,19 +372,16 @@ def compliance_check():
 
     issues = []
 
-    # CPU Check
     if cpu < 75:
         issues.append(f"CPU usage ({cpu}%) passed")
     else:
         issues.append(f"CPU usage high ({cpu}%) failed")
 
-    # RAM Check
     if ram < 80:
         issues.append(f"RAM usage ({ram}%) passed")
     else:
         issues.append(f"RAM usage high ({ram}%) failed")
 
-    # Disk Check
     if disk < 85:
         issues.append(f"Disk usage ({disk}%) passed")
     else:
